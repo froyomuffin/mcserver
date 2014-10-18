@@ -1,0 +1,80 @@
+#/bin/bash
+
+JARDIR="/home/mc/jars"
+SERVERDIR="/home/mc/server"
+WORLDDIR="/home/mc/server/pony/"
+MAPDIR="/var/www/mcserver/"
+BACKUPDIR="/home/mc/worldbackups"
+
+CMD=$1
+
+getpid() {
+	ps -ef | grep java.*minecraft.*jar | grep -v grep | awk '{ print $2 }' | xargs
+}
+
+status() {
+	PID=`getpid`
+	if [ -z $PID ]
+	then
+		echo "Minecraft Server is not running"
+	else
+		echo "Minecraft Server is running with PID: $PID"
+	fi	
+}
+
+start() {
+	echo "Starting Minecraft Server"
+	LATESTJAR="$JARDIR/"`ls -r $JARDIR | sed 's/ /\n/g' | head -1`
+	echo "Using $LATESTJAR"
+	cd $SERVERDIR
+	java -Xmx1024M -Xms512M -jar $LATESTJAR nogui &
+}
+
+stop() {
+	PID=`getpid`
+        if [ -z $PID ]
+        then
+                echo "Minecraft Server is not running"
+        else
+		echo "Stopping Minecraft Server"
+                echo "PID: $PID"
+		kill $PID
+        fi
+}
+
+backup() {
+	BACKUPNAME="$BACKUPDIR/mcserver-"`date +%s`".gz"
+	echo "Backing up $WORLDDIR to $BACKUPNAME"
+	tar -czf $BACKUPNAME $WORLDDIR
+}
+
+render() {
+	echo "Rendering world map"
+	overviewer.py --config=/home/mc/mapconfig
+}
+
+case $CMD in
+	status)
+		status
+	;;
+	start)
+		start
+	;;
+	stop)
+		stop
+	;;
+	restart)
+		stop
+		start
+	;;
+	backup)
+		backup
+	;;
+	render)
+		render
+	;;
+	*)
+		echo "Usage: status|start|stop|restart|backup|render"
+	;;
+esac
+
