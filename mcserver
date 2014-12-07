@@ -24,10 +24,10 @@ status() {
 
 start() {
 	echo "Starting Minecraft Server"
-	LATESTJAR="$JARDIR/"`ls -r $JARDIR | sed 's/ /\n/g' | head -1`
+	LATESTJAR="$JARDIR/"`ls -lv $JARDIR | sed 's/ /\n/g' | tail -1`
 	echo "Using $LATESTJAR"
 	cd $SERVERDIR
-	java -Xmx1024M -Xms512M -jar $LATESTJAR nogui &
+	java -Xmx1224M -Xms1024M -jar $LATESTJAR nogui &
 }
 
 stop() {
@@ -49,6 +49,8 @@ backup() {
 }
 
 render() {
+	#echo "Deleting existing world map"
+	#rm -rf $MAPDIR/*
 	echo "Rendering world map"
 	overviewer.py --config=/home/mc/mapconfig
 }
@@ -68,10 +70,14 @@ case $CMD in
 		start
 	;;
 	backup)
+		stop
 		backup
+		start
 	;;
 	render)
+		stop
 		render
+		start
 	;;
 	*)
 		echo "Usage: status|start|stop|restart|backup|render"
